@@ -1,0 +1,244 @@
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: kafka-producer
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: kafka-producer
+#   template:
+#     metadata:
+#       name: kafka-producer
+#       labels:
+#         app: kafka-producer
+#      annotations:
+#        ad.datadoghq.com/kafka-producer.logs: >-
+#          [
+#            {
+#              "source": "java",
+#              "service": "kafka-producer"
+#            }
+#          ]
+#     spec:
+#       containers:
+#         - name: kafka-producer 
+#           image: yaalexf/kafka-client
+#           imagePullPolicy: Always
+#           resources:
+#             requests:
+#               memory: "160Mi"
+#               cpu: "250m"
+#             limits:
+#               memory: "196Mi"
+#               cpu: "500m"
+#           env:
+#             - name: DD_AGENT_HOST
+#               valueFrom:
+#                 fieldRef:
+#                   fieldPath: status.hostIP
+#             - name: DD_SERVICE_NAME
+#               value: "kafka-producer"
+#             - name: DD_LOGS_INJECTION
+#               value: "true"
+#             - name: DD_TRACE_ANALYTICS_ENABLED
+#               value: "true"
+#             - name: DD_TRACE_GLOBAL_TAGS
+#               value: "env:k8s"
+#             - name: BOOTSTRAP
+#               value: "kafka.azure.pipsquack.ca:9092"
+#             - name: TOPIC_OUT
+#               value: "q1"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-middleman
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-middleman
+  template:
+    metadata:
+      name: kafka-middleman
+      labels:
+        app: kafka-middleman
+      annotations:
+        ad.datadoghq.com/kafka-middleman.logs: >-
+          [
+            {
+              "source": "java",
+              "service": "kafka-middleman"
+            }
+          ]
+    spec:
+      containers:
+        - name: kafka-middleman 
+          image: yaalexf/kafka-client
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "160Mi"
+              cpu: "250m"
+            limits:
+              memory: "196Mi"
+              cpu: "500m"
+          env:
+            - name: DD_AGENT_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: DD_ENV
+              value: "k8s"
+            - name: DD_SERVICE
+              value: "kafka-middleman"
+            - name: DD_LOGS_INJECTION
+              value: "true"
+            - name: DD_TRACE_ANALYTICS_ENABLED
+              value: "true"
+            - name: DD_SERVICE_MAPPING
+              value: "kafka:kafka-middleman"
+            - name: BOOTSTRAP
+              value: "kafka.azure.pipsquack.ca:9092"
+            - name: TOPIC_IN
+              value: "a1"
+            - name: TOPIC_OUT
+              value: "a2"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-consumer
+  template:
+    metadata:
+      name: kafka-consumer
+      labels:
+        app: kafka-consumer
+      annotations:
+        ad.datadoghq.com/kafka-consumer.logs: >-
+          [
+            {
+              "source": "java",
+              "service": "kafka-consumer"
+            }
+          ]
+    spec:
+      containers:
+        - name: kafka-consumer 
+          image: yaalexf/kafka-client
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "160Mi"
+              cpu: "250m"
+            limits:
+              memory: "196Mi"
+              cpu: "500m"
+          env:
+            - name: DD_AGENT_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: DD_ENV
+              value: "k8s"
+            - name: DD_SERVICE
+              value: "kafka-consumer"
+            - name: DD_LOGS_INJECTION
+              value: "true"
+            - name: DD_TRACE_ANALYTICS_ENABLED
+              value: "true"
+            - name: DD_SERVICE_MAPPING
+              value: "kafka:kafka-consumer"
+            - name: BOOTSTRAP
+              value: "kafka.azure.pipsquack.ca:9092"
+            - name: TOPIC_IN
+              value: "a2"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-servlet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-servlet
+  template:
+    metadata:
+      name: kafka-servlet
+      labels:
+        app: kafka-servlet
+      annotations:
+        ad.datadoghq.com/kafka-servlet.logs: >-
+          [
+            {
+              "source": "java",
+              "service": "kafka-servlet"
+            }
+          ]
+    spec:
+      containers:
+        - name: kafka-servlet 
+          image: yaalexf/kafka-client
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "160Mi"
+              cpu: "250m"
+            limits:
+              memory: "196Mi"
+              cpu: "500m"
+          env:
+            - name: DD_AGENT_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: DD_ENV
+              value: "k8s"
+            - name: DD_SERVICE
+              value: "kafka-servlet"
+            - name: DD_LOGS_INJECTION
+              value: "true"
+            - name: DD_TRACE_ANALYTICS_ENABLED
+              value: "true"
+            - name: DD_SERVICE_MAPPING
+              value: "kafka:kafka-servlet"
+            - name: BOOTSTRAP
+              value: "kafka.azure.pipsquack.ca:9092"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: kafka-servlet
+  name: kafka-servlet
+spec:
+  selector:
+    app: kafka-servlet
+  ports:
+    - port: 8000
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: kafka-servlet
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+  # host: master.k8s.aws.pipsquack.ca
+  - http:
+      paths:
+      - path: /kafka(/|$)(.*)
+        backend:
+          serviceName: kafka-servlet
+          servicePort: 8000

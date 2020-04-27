@@ -1,0 +1,20 @@
+version: "3"
+services:
+  app-java:
+    container_name: kafka-client
+    image: yaalexf/kafka-client:latest
+    environment:
+      DD_AGENT_HOST: "192.168.1.5"
+      DD_SERVICE_NAME: "kafka-client"
+      DD_LOGS_INJECTION: "true"
+      DD_TRACE_ANALYTICS_ENABLED: "true"
+      DD_JDBC_ANALYTICS_ENABLED: "true"
+      DD_TRACE_GLOBAL_TAGS: "env:lab"
+      DD_PROFILING_APIKEY: "83d2093b8de7f1ab7e7dfedda88d68ec"
+      DD_PROFILING_ENABLED: "true"
+      BOOTSTRAP: "kafka.azure.pipsquack.ca:9092"
+      TOPIC_IN: "q1"
+      TOPIC_OUT: "q2"
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "java", "service": "kafka-client"}]'
+    restart: unless-stopped
