@@ -10,7 +10,7 @@ services:
       DD_TRACE_ANALYTICS_ENABLED: "true"
       DD_JDBC_ANALYTICS_ENABLED: "true"
       DD_TRACE_GLOBAL_TAGS: "env:lab"
-      DD_PROFILING_APIKEY: "83d2093b8de7f1ab7e7dfedda88d68ec"
+      DD_PROFILING_APIKEY: "${DD_API_KEY}"
       DD_PROFILING_ENABLED: "true"
       BOOTSTRAP: "kafka.azure.pipsquack.ca:9092"
       TOPIC_IN: "q1"
