@@ -90,6 +90,13 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            - name: DD_PROFILING_ENABLED
+              value: "true"
+            - name: DD_PROFILING_APIKEY
+              valueFrom:
+                secretKeyRef:
+                  name: dd
+                  key: api-key
             - name: DD_ENV
               value: "k8s"
             - name: DD_SERVICE
@@ -146,6 +153,13 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            - name: DD_PROFILING_ENABLED
+              value: "true"
+            - name: DD_PROFILING_APIKEY
+              valueFrom:
+                secretKeyRef:
+                  name: dd
+                  key: api-key
             - name: DD_ENV
               value: "k8s"
             - name: DD_SERVICE
@@ -200,6 +214,13 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            - name: DD_PROFILING_ENABLED
+              value: "true"
+            - name: DD_PROFILING_APIKEY
+              valueFrom:
+                secretKeyRef:
+                  name: dd
+                  key: api-key
             - name: DD_ENV
               value: "k8s"
             - name: DD_SERVICE
