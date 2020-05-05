@@ -23,7 +23,7 @@ dependencies {
     implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
 	implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '6.3'
 
-	implementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.26.v20200117'	
+	implementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.26.v20200117'
 	
-	runtimeOnly files('src/resources')
+	runtimeOnly files('src/dist/lib/resources')
 }
