@@ -32,6 +32,7 @@ public class Main {
 		String inTopic = System.getenv("TOPIC_IN");
 		String outTopic = System.getenv("TOPIC_OUT");
 		String groupId = System.getenv("DD_SERVICE");
+		Long producerDelay = Long.parseLong(System.getenv().getOrDefault("PRODUCER_DELAY", "3000"));
 
 		consumerProperties = new Properties();
 		consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrap);
@@ -82,7 +83,9 @@ public class Main {
 					ProducerRecord<String, String> outRecord = new ProducerRecord<String, String>(outTopic, payload);
 					logger.info("Sending message with content [" + payload + "]");
 					producer.send(outRecord);
-					Thread.sleep(3000);
+					if (producerDelay != 0) {
+						Thread.sleep(producerDelay);
+					}
 				}
 			}
 		} else {
