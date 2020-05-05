@@ -43,8 +43,6 @@
 #               value: "true"
 #             - name: DD_TRACE_ANALYTICS_ENABLED
 #               value: "true"
-#             - name: DD_TRACE_GLOBAL_TAGS
-#               value: "env:k8s"
 #             - name: BOOTSTRAP
 #               value: "kafka.azure.pipsquack.ca:9092"
 #             - name: TOPIC_OUT
@@ -83,7 +81,7 @@ spec:
               memory: "160Mi"
               cpu: "250m"
             limits:
-              memory: "196Mi"
+              memory: "256Mi"
               cpu: "500m"
           env:
             - name: DD_AGENT_HOST
@@ -97,8 +95,6 @@ spec:
                 secretKeyRef:
                   name: dd
                   key: api-key
-            - name: DD_ENV
-              value: "k8s"
             - name: DD_SERVICE
               value: "kafka-middleman"
             - name: DD_LOGS_INJECTION
@@ -146,7 +142,7 @@ spec:
               memory: "160Mi"
               cpu: "250m"
             limits:
-              memory: "196Mi"
+              memory: "256Mi"
               cpu: "500m"
           env:
             - name: DD_AGENT_HOST
@@ -160,8 +156,6 @@ spec:
                 secretKeyRef:
                   name: dd
                   key: api-key
-            - name: DD_ENV
-              value: "k8s"
             - name: DD_SERVICE
               value: "kafka-consumer"
             - name: DD_LOGS_INJECTION
@@ -207,7 +201,7 @@ spec:
               memory: "160Mi"
               cpu: "250m"
             limits:
-              memory: "196Mi"
+              memory: "256Mi"
               cpu: "500m"
           env:
             - name: DD_AGENT_HOST
@@ -221,8 +215,6 @@ spec:
                 secretKeyRef:
                   name: dd
                   key: api-key
-            - name: DD_ENV
-              value: "k8s"
             - name: DD_SERVICE
               value: "kafka-servlet"
             - name: DD_LOGS_INJECTION
