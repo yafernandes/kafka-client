@@ -24,6 +24,9 @@ import io.opentracing.util.GlobalTracer;
 public class Main {
 
 	static final String TRANSACTION_START = "transaction.start";
+	static final String TRANSACTION_QUEUE_TIME = "transaction.queue_time";
+	static final String TRANSACTION_PREVIOUS_TS = "transaction.previous";
+	static final String TRANSACTION_ELAPSED = "transaction.elapsed";
 	private static final Logger logger = LoggerFactory.getLogger("com.datadog.demo");
 	static Properties consumerProperties;
 	static Properties producerProperties;
@@ -62,10 +65,12 @@ public class Main {
 					for (ConsumerRecord<String, String> inRecord : records) {
 						ProducerRecord<String, String> outRecord = new ProducerRecord<String, String>(outTopic,
 								inRecord.value());
+						setQueueTime();
 						logger.info("Passing message with content [" + inRecord.value() + "]");
-						processBaggage();
-						producer.send(outRecord);
 						Thread.sleep(40);
+						setPreviousTime();
+						producer.send(outRecord);
+						setElapsedTime();
 					}
 				}
 			}
@@ -75,9 +80,10 @@ public class Main {
 				while (true) {
 					ConsumerRecords<String, String> records = consumer.poll(Duration.ofDays(1));
 					for (ConsumerRecord<String, String> inRecord : records) {
+						setQueueTime();
 						logger.info("Received message with content [" + inRecord.value() + "]");
-						processBaggage();
 						Thread.sleep(40);
+						setElapsedTime();
 					}
 				}
 			}
@@ -88,6 +94,7 @@ public class Main {
 					String payload = "The quick brown fox jumps over the lazy dog";
 					ProducerRecord<String, String> outRecord = new ProducerRecord<String, String>(outTopic, payload);
 					logger.info("Sending message with content [" + payload + "]");
+					setPreviousTime();
 					producer.send(outRecord);
 					if (producerDelay != 0) {
 						Thread.sleep(producerDelay);
@@ -104,13 +111,27 @@ public class Main {
 		}
 	}
 
-	private static void processBaggage() {
+	static void setStartTime() {
+		GlobalTracer.get().activeSpan().setBaggageItem(TRANSACTION_START, Long.toString(System.currentTimeMillis()));
+	}
+
+	static void setPreviousTime() {
+		GlobalTracer.get().activeSpan().setBaggageItem(TRANSACTION_PREVIOUS_TS, Long.toString(System.currentTimeMillis()));
+	}
+
+	private static void setQueueTime() {
+		Span span = GlobalTracer.get().activeSpan();
+		String previous = span.getBaggageItem(TRANSACTION_PREVIOUS_TS);
+		if (previous != null) {
+			span.setTag(TRANSACTION_QUEUE_TIME, Long.toString(System.currentTimeMillis() - Long.parseLong(previous)));
+		}
+	}
+
+	private static void setElapsedTime() {
 		Span span = GlobalTracer.get().activeSpan();
 		String start = span.getBaggageItem(TRANSACTION_START);
 		if (start != null) {
-			logger.info("Received baggage " + span.getBaggageItem(TRANSACTION_START));
-			span.setTag("transaction.elapsed_time",
-					System.currentTimeMillis() - Long.parseLong(span.getBaggageItem(TRANSACTION_START)));
+			span.setTag(TRANSACTION_ELAPSED, System.currentTimeMillis() - Long.parseLong(start));
 		}
 	}
 }

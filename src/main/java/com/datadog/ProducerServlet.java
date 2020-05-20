@@ -16,8 +16,6 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.opentracing.util.GlobalTracer;
-
 public class ProducerServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
@@ -32,12 +30,13 @@ public class ProducerServlet extends HttpServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		Main.setStartTime();
 		String topic = req.getPathInfo().split("/")[1];
 		logger.info("Sending message to topic [" + topic + "]");
 		String payload = req.getParameter("payload");
 		ProducerRecord<String, String> outRecord = new ProducerRecord<String, String>(topic, payload);
 		logger.info("Sending message with content [" + payload + "]");
-		GlobalTracer.get().activeSpan().setBaggageItem(Main.TRANSACTION_START, Long.toString(System.currentTimeMillis()));
+		Main.setPreviousTime();
 		Future<RecordMetadata> future = producer.send(outRecord);
 
 		resp.setContentType("text/plain;charset=UTF-8");
