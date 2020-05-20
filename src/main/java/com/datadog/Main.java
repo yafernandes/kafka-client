@@ -3,6 +3,7 @@ package com.datadog;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -11,6 +12,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.record.TimestampType;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.eclipse.jetty.server.Server;
@@ -18,6 +20,7 @@ import org.eclipse.jetty.servlet.ServletHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import datadog.trace.api.interceptor.MutableSpan;
 import io.opentracing.Span;
 import io.opentracing.util.GlobalTracer;
 
@@ -25,7 +28,6 @@ public class Main {
 
 	static final String TRANSACTION_START = "transaction.start";
 	static final String TRANSACTION_QUEUE_TIME = "transaction.queue_time";
-	static final String TRANSACTION_PREVIOUS_TS = "transaction.previous";
 	static final String TRANSACTION_ELAPSED = "transaction.elapsed";
 	private static final Logger logger = LoggerFactory.getLogger("com.datadog.demo");
 	static Properties consumerProperties;
@@ -57,6 +59,7 @@ public class Main {
 		producerProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 
 		if (inTopic != null && outTopic != null) {
+			// MIDDLEMAN - PRODUCER and CONSUMER
 			try (KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(consumerProperties);
 					KafkaProducer<String, String> producer = new KafkaProducer<String, String>(producerProperties)) {
 				consumer.subscribe(Arrays.asList(inTopic));
@@ -65,22 +68,23 @@ public class Main {
 					for (ConsumerRecord<String, String> inRecord : records) {
 						ProducerRecord<String, String> outRecord = new ProducerRecord<String, String>(outTopic,
 								inRecord.value());
-						setQueueTime();
+						setQueueTime(inRecord);
 						logger.info("Passing message with content [" + inRecord.value() + "]");
 						Thread.sleep(40);
-						setPreviousTime();
 						producer.send(outRecord);
 						setElapsedTime();
 					}
 				}
 			}
 		} else if (inTopic != null) {
+			// CONSUMER
 			try (KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(consumerProperties)) {
 				consumer.subscribe(Arrays.asList(inTopic));
 				while (true) {
 					ConsumerRecords<String, String> records = consumer.poll(Duration.ofDays(1));
 					for (ConsumerRecord<String, String> inRecord : records) {
-						setQueueTime();
+						inRecord.timestamp();
+						setQueueTime(inRecord);
 						logger.info("Received message with content [" + inRecord.value() + "]");
 						Thread.sleep(40);
 						setElapsedTime();
@@ -89,12 +93,12 @@ public class Main {
 			}
 
 		} else if (outTopic != null) {
+			// PRODUCER
 			try (KafkaProducer<String, String> producer = new KafkaProducer<String, String>(producerProperties)) {
 				while (true) {
 					String payload = "The quick brown fox jumps over the lazy dog";
 					ProducerRecord<String, String> outRecord = new ProducerRecord<String, String>(outTopic, payload);
 					logger.info("Sending message with content [" + payload + "]");
-					setPreviousTime();
 					producer.send(outRecord);
 					if (producerDelay != 0) {
 						Thread.sleep(producerDelay);
@@ -112,19 +116,20 @@ public class Main {
 	}
 
 	static void setStartTime() {
-		GlobalTracer.get().activeSpan().setBaggageItem(TRANSACTION_START, Long.toString(System.currentTimeMillis()));
-	}
-
-	static void setPreviousTime() {
-		GlobalTracer.get().activeSpan().setBaggageItem(TRANSACTION_PREVIOUS_TS, Long.toString(System.currentTimeMillis()));
-	}
-
-	private static void setQueueTime() {
 		Span span = GlobalTracer.get().activeSpan();
-		String previous = span.getBaggageItem(TRANSACTION_PREVIOUS_TS);
-		if (previous != null) {
-			span.setTag(TRANSACTION_QUEUE_TIME, Long.toString(System.currentTimeMillis() - Long.parseLong(previous)));
+		if (span instanceof MutableSpan) {
+			long startTime = TimeUnit.NANOSECONDS.toMillis(((MutableSpan) span).getStartTime());
+			GlobalTracer.get().activeSpan().setBaggageItem(TRANSACTION_START,
+					Long.toString(startTime));
+		} else {
+			logger.warn("SPAN class is " + span.getClass().getCanonicalName());
 		}
+	}
+
+	private static void setQueueTime(ConsumerRecord<String, String> record) {
+		logger.info("Using record timestamp of type " + record.timestampType().name);
+		GlobalTracer.get().activeSpan().setTag(TRANSACTION_QUEUE_TIME,
+				Long.toString(System.currentTimeMillis() - record.timestamp()));
 	}
 
 	private static void setElapsedTime() {

@@ -36,7 +36,6 @@ public class ProducerServlet extends HttpServlet {
 		String payload = req.getParameter("payload");
 		ProducerRecord<String, String> outRecord = new ProducerRecord<String, String>(topic, payload);
 		logger.info("Sending message with content [" + payload + "]");
-		Main.setPreviousTime();
 		Future<RecordMetadata> future = producer.send(outRecord);
 
 		resp.setContentType("text/plain;charset=UTF-8");
