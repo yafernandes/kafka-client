@@ -115,6 +115,9 @@ gradle-app.setting
 ### Gradle Patch ###
 **/build/
 
+# VS CODE
+.vscode/
+
 # End of https://www.gitignore.io/api/java,gradle,eclipse
 
 .DS_Store

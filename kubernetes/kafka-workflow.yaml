@@ -24,7 +24,7 @@
 #       containers:
 #         - name: kafka-producer 
 #           image: yaalexf/kafka-client
-#           imagePullPolicy: Always
+#           imagePullPolicy: IfNotPresent
 #           resources:
 #             requests:
 #               memory: "160Mi"
@@ -74,8 +74,8 @@ spec:
     spec:
       containers:
         - name: kafka-middleman 
-          image: yaalexf/kafka-client
-          imagePullPolicy: Always
+          image: kafka-client-example
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: "160Mi"
@@ -93,8 +93,8 @@ spec:
             - name: DD_PROFILING_APIKEY
               valueFrom:
                 secretKeyRef:
-                  name: dd
-                  key: api-key
+                  name: datadog-api
+                  key: token
             - name: DD_SERVICE
               value: "kafka-middleman"
             - name: DD_LOGS_INJECTION
@@ -108,7 +108,9 @@ spec:
             - name: TOPIC_IN
               value: "a1"
             - name: TOPIC_OUT
-              value: "a2"
+              value: "a3"
+            - name: DD_TAGS
+              value: "env:kafka project:america"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -135,8 +137,8 @@ spec:
     spec:
       containers:
         - name: kafka-consumer 
-          image: yaalexf/kafka-client
-          imagePullPolicy: Always
+          image: kafka-client-example
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: "160Mi"
@@ -154,8 +156,8 @@ spec:
             - name: DD_PROFILING_APIKEY
               valueFrom:
                 secretKeyRef:
-                  name: dd
-                  key: api-key
+                  name: datadog-api
+                  key: token
             - name: DD_SERVICE
               value: "kafka-consumer"
             - name: DD_LOGS_INJECTION
@@ -167,7 +169,9 @@ spec:
             - name: BOOTSTRAP
               value: "kafka.azure.pipsquack.ca:9092"
             - name: TOPIC_IN
-              value: "a2"
+              value: "a3"
+            - name: DD_TAGS
+              value: "env:kafka project:america"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -194,8 +198,8 @@ spec:
     spec:
       containers:
         - name: kafka-servlet 
-          image: yaalexf/kafka-client
-          imagePullPolicy: Always
+          image: kafka-client-example
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: "160Mi"
@@ -213,8 +217,8 @@ spec:
             - name: DD_PROFILING_APIKEY
               valueFrom:
                 secretKeyRef:
-                  name: dd
-                  key: api-key
+                  name: datadog-api
+                  key: token
             - name: DD_SERVICE
               value: "kafka-servlet"
             - name: DD_LOGS_INJECTION
@@ -225,6 +229,8 @@ spec:
               value: "kafka:kafka-servlet"
             - name: BOOTSTRAP
               value: "kafka.azure.pipsquack.ca:9092"
+            - name: DD_TAGS
+              value: "env:kafka"
 ---
 kind: Service
 apiVersion: v1

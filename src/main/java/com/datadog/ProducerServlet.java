@@ -3,6 +3,7 @@ package com.datadog;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -15,6 +16,11 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import datadog.trace.api.interceptor.MutableSpan;
+import io.opentracing.Span;
+import io.opentracing.util.GlobalTracer;
+
 
 public class ProducerServlet extends HttpServlet {
 
@@ -30,6 +36,17 @@ public class ProducerServlet extends HttpServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		Span span = GlobalTracer.get().activeSpan();
+		if (span != null) {
+		if (span instanceof MutableSpan) {
+			final long startTime = ((MutableSpan) GlobalTracer.get().activeSpan()).getLocalRootSpan().getStartTime();
+			span.setBaggageItem("request.startTime", Long.toString(TimeUnit.NANOSECONDS.toMillis(startTime)));
+		} else {
+			// Fall back to the current time
+			span.setBaggageItem("request.startTime", Long.toString(System.currentTimeMillis()));
+		}
+		}
+		  
 		String topic = req.getPathInfo().split("/")[1];
 		logger.info("Sending message to topic [" + topic + "]");
 		String payload = req.getParameter("payload");

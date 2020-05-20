@@ -3,6 +3,7 @@ package com.datadog;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -17,6 +18,10 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import datadog.trace.api.interceptor.MutableSpan;
+import io.opentracing.Span;
+import io.opentracing.util.GlobalTracer;
 
 public class Main {
 
@@ -61,6 +66,23 @@ public class Main {
 						logger.info("Passing message with content [" + inRecord.value() + "]");
 						producer.send(outRecord);
 						Thread.sleep(40);
+
+						Span span = GlobalTracer.get().activeSpan();
+						if (span != null) {
+							if (span instanceof MutableSpan) {
+								final long consumeTime = ((MutableSpan) span).getLocalRootSpan().getStartTime();
+								final long produceTime = inRecord.timestamp();
+								span.setBaggageItem("request.queuetime", Long.toString(consumeTime - produceTime));
+
+								final String startTimeString = span.getBaggageItem("request.starttime");
+								if (startTimeString != null) {
+									final long startTime = Long.parseLong(startTimeString);
+									final long endTime = System.currentTimeMillis();
+									span.setBaggageItem("request.totaltime", Long.toString(endTime - startTime));
+								}
+
+							}
+						}
 					}
 				}
 			}
@@ -72,6 +94,22 @@ public class Main {
 					for (ConsumerRecord<String, String> inRecord : records) {
 						logger.info("Received message with content [" + inRecord.value() + "]");
 						Thread.sleep(40);
+						
+						Span span = GlobalTracer.get().activeSpan();
+							if (span != null) {
+							if (span instanceof MutableSpan) {
+								final long consumeTime = ((MutableSpan) span).getLocalRootSpan().getStartTime();
+								final long produceTime = inRecord.timestamp();
+								span.setTag("request.queuetime", Long.toString(consumeTime - produceTime));
+
+								final String startTimeString = span.getBaggageItem("request.starttime");
+								if (startTimeString != null) {
+									final long startTime = Long.parseLong(startTimeString);
+									final long endTime = System.currentTimeMillis();
+									span.setTag("request.totaltime", Long.toString(endTime - startTime));
+								}
+							}
+						}
 					}
 				}
 			}
@@ -97,4 +135,5 @@ public class Main {
 			server.join();
 		}
 	}
+
 }
