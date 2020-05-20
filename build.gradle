@@ -24,6 +24,8 @@ dependencies {
 	implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '6.3'
 
 	implementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.26.v20200117'
+
+	implementation group: 'com.datadoghq', name: 'dd-trace-ot', version: '0.51.0'
 	
 	runtimeOnly files('src/dist/lib/resources')
 }

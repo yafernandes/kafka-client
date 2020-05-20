@@ -18,8 +18,12 @@ import org.eclipse.jetty.servlet.ServletHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.opentracing.Span;
+import io.opentracing.util.GlobalTracer;
+
 public class Main {
 
+	static final String TRANSACTION_START = "transaction.start";
 	private static final Logger logger = LoggerFactory.getLogger("com.datadog.demo");
 	static Properties consumerProperties;
 	static Properties producerProperties;
@@ -59,6 +63,7 @@ public class Main {
 						ProducerRecord<String, String> outRecord = new ProducerRecord<String, String>(outTopic,
 								inRecord.value());
 						logger.info("Passing message with content [" + inRecord.value() + "]");
+						processBaggage();
 						producer.send(outRecord);
 						Thread.sleep(40);
 					}
@@ -71,6 +76,7 @@ public class Main {
 					ConsumerRecords<String, String> records = consumer.poll(Duration.ofDays(1));
 					for (ConsumerRecord<String, String> inRecord : records) {
 						logger.info("Received message with content [" + inRecord.value() + "]");
+						processBaggage();
 						Thread.sleep(40);
 					}
 				}
@@ -95,6 +101,16 @@ public class Main {
 			handler.addServletWithMapping(ProducerServlet.class, "/send/*");
 			server.start();
 			server.join();
+		}
+	}
+
+	private static void processBaggage() {
+		Span span = GlobalTracer.get().activeSpan();
+		String start = span.getBaggageItem(TRANSACTION_START);
+		if (start != null) {
+			logger.info("Received baggage " + span.getBaggageItem(TRANSACTION_START));
+			span.setTag("transaction.elapsed_time",
+					System.currentTimeMillis() - Long.parseLong(span.getBaggageItem(TRANSACTION_START)));
 		}
 	}
 }
