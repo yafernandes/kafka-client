@@ -42,7 +42,7 @@ spec:
           - name: DD_LEADER_ELECTION
             value: "true"
           - name: DD_TAGS
-            value: "owner:ziquan"
+            value: "owner:ziquan env:host"
           # Live Process Monitoring
           - name: DD_PROCESS_AGENT_ENABLED
             value: "true"

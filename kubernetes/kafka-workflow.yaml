@@ -63,6 +63,9 @@ spec:
       name: kafka-middleman
       labels:
         app: kafka-middleman
+        tags.datadoghq.com/env: app_env
+        tags.datadoghq.com/service: kafka-middleman
+        tags.datadoghq.com/version: "f651b3"
       annotations:
         ad.datadoghq.com/kafka-middleman.logs: >-
           [
@@ -111,6 +114,18 @@ spec:
               value: "a3"
             - name: DD_TAGS
               value: "env:kafka project:america"
+            - name: DD_ENV
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/env']
+            - name: DD_SERVICE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/service']
+            - name: DD_VERSION
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/version']
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -126,6 +141,9 @@ spec:
       name: kafka-consumer
       labels:
         app: kafka-consumer
+        tags.datadoghq.com/env: app_env
+        tags.datadoghq.com/service: kafka-consumer
+        tags.datadoghq.com/version: "f651b3"
       annotations:
         ad.datadoghq.com/kafka-consumer.logs: >-
           [
@@ -172,6 +190,30 @@ spec:
               value: "a3"
             - name: DD_TAGS
               value: "env:kafka project:america"
+            - name: DD_ENV
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/env']
+            - name: DD_SERVICE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/service']
+            - name: DD_VERSION
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/version']
+            - name: DD_ENV
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/env']
+            - name: DD_SERVICE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/service']
+            - name: DD_VERSION
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/version']
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -187,6 +229,9 @@ spec:
       name: kafka-servlet
       labels:
         app: kafka-servlet
+        tags.datadoghq.com/env: app_env
+        tags.datadoghq.com/service: kafka-servlet
+        tags.datadoghq.com/version: "f651b3"
       annotations:
         ad.datadoghq.com/kafka-servlet.logs: >-
           [
@@ -231,6 +276,18 @@ spec:
               value: "kafka.azure.pipsquack.ca:9092"
             - name: DD_TAGS
               value: "env:kafka"
+            - name: DD_ENV
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/env']
+            - name: DD_SERVICE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/service']
+            - name: DD_VERSION
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/version']
 ---
 kind: Service
 apiVersion: v1
