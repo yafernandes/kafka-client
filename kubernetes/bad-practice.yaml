@@ -1,54 +1,3 @@
-# apiVersion: apps/v1
-# kind: Deployment
-# metadata:
-#   name: kafka-producer
-# spec:
-#   replicas: 1
-#   selector:
-#     matchLabels:
-#       app: kafka-producer
-#   template:
-#     metadata:
-#       name: kafka-producer
-#       labels:
-#         app: kafka-producer
-#      annotations:
-#        ad.datadoghq.com/kafka-producer.logs: >-
-#          [
-#            {
-#              "source": "java",
-#              "service": "kafka-producer"
-#            }
-#          ]
-#     spec:
-#       containers:
-#         - name: kafka-producer 
-#           image: yaalexf/kafka-client
-#           imagePullPolicy: Always
-#           resources:
-#             requests:
-#               memory: "160Mi"
-#               cpu: "250m"
-#             limits:
-#               memory: "196Mi"
-#               cpu: "500m"
-#           env:
-#             - name: DD_AGENT_HOST
-#               valueFrom:
-#                 fieldRef:
-#                   fieldPath: status.hostIP
-#             - name: DD_SERVICE_NAME
-#               value: "kafka-producer"
-#             - name: DD_LOGS_INJECTION
-#               value: "true"
-#             - name: DD_TRACE_ANALYTICS_ENABLED
-#               value: "true"
-#             - name: BOOTSTRAP
-#               value: "kafka.azure.pipsquack.ca:9092"
-#             - name: TOPIC_OUT
-#               value: "q1"
-
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -63,7 +12,7 @@ spec:
       name: kafka-middleman
       labels:
         app: kafka-middleman
-        tags.datadoghq.com/env: techshare
+        tags.datadoghq.com/env: badpractice
         tags.datadoghq.com/service: middleman
         tags.datadoghq.com/version: "0.1"
       annotations:
@@ -103,25 +52,18 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.labels['tags.datadoghq.com/version']
-            - name: DD_PROFILING_ENABLED
-              value: "true"
-            - name: DD_PROFILING_APIKEY
-              valueFrom:
-                secretKeyRef:
-                  name: datadog-keys
-                  key: api-key
             - name: DD_LOGS_INJECTION
               value: "true"
             - name: DD_TRACE_ANALYTICS_ENABLED
               value: "true"
-            - name: DD_SERVICE_MAPPING
-              value: "kafka:kafka-middleman"
             - name: BOOTSTRAP
               value: "kafka.azure.pipsquack.ca:9092"
             - name: TOPIC_IN
-              value: "alex1"
+              value: "bp1"
             - name: TOPIC_OUT
-              value: "alex2"
+              value: "bp2"
+            - name: JAVA_OPTS
+              value: ""
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -137,7 +79,7 @@ spec:
       name: kafka-consumer
       labels:
         app: kafka-consumer
-        tags.datadoghq.com/env: techshare
+        tags.datadoghq.com/env: badpractice
         tags.datadoghq.com/service: consumer
         tags.datadoghq.com/version: "0.1"
       annotations:
@@ -177,23 +119,14 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.labels['tags.datadoghq.com/version']
-            - name: DD_PROFILING_ENABLED
-              value: "true"
-            - name: DD_PROFILING_APIKEY
-              valueFrom:
-                secretKeyRef:
-                  name: datadog-keys
-                  key: api-key
             - name: DD_LOGS_INJECTION
               value: "true"
             - name: DD_TRACE_ANALYTICS_ENABLED
               value: "true"
-            - name: DD_SERVICE_MAPPING
-              value: "kafka:kafka-consumer"
             - name: BOOTSTRAP
               value: "kafka.azure.pipsquack.ca:9092"
             - name: TOPIC_IN
-              value: "alex2"
+              value: "bp2"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -209,7 +142,7 @@ spec:
       name: kafka-servlet
       labels:
         app: kafka-servlet
-        tags.datadoghq.com/env: techshare
+        tags.datadoghq.com/env: badpractice
         tags.datadoghq.com/service: servlet
         tags.datadoghq.com/version: "0.1"
       annotations:
@@ -249,19 +182,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.labels['tags.datadoghq.com/version']
-            - name: DD_PROFILING_ENABLED
-              value: "true"
-            - name: DD_PROFILING_APIKEY
-              valueFrom:
-                secretKeyRef:
-                  name: datadog-keys
-                  key: api-key
             - name: DD_LOGS_INJECTION
               value: "true"
             - name: DD_TRACE_ANALYTICS_ENABLED
               value: "true"
-            - name: DD_SERVICE_MAPPING
-              value: "kafka:kafka-servlet"
             - name: BOOTSTRAP
               value: "kafka.azure.pipsquack.ca:9092"
 ---
@@ -290,7 +214,7 @@ spec:
   # host: master.k8s.aws.pipsquack.ca
   - http:
       paths:
-      - path: /kafka(/|$)(.*)
+      - path: /badpractice(/|$)(.*)
         backend:
           serviceName: kafka-servlet
           servicePort: 8000
