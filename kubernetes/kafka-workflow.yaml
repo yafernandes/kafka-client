@@ -2,16 +2,20 @@
 # kind: Deployment
 # metadata:
 #   name: kafka-producer
+#   labels:
+#     tags.datadoghq.com/service: kakfa-producer
+#     tags.datadoghq.com/version: "0.1"
+#     app.kubernetes.io/name: kafka-producer
 # spec:
 #   replicas: 1
 #   selector:
 #     matchLabels:
-#       app: kafka-producer
+#       app.kubernetes.io/name: kafka-producer
 #   template:
 #     metadata:
 #       name: kafka-producer
 #       labels:
-#         app: kafka-producer
+#         app.kubernetes.io/name: kafka-producer
 #      annotations:
 #        ad.datadoghq.com/kafka-producer.logs: >-
 #          [
@@ -33,12 +37,6 @@
 #               memory: "196Mi"
 #               cpu: "500m"
 #           env:
-#             - name: DD_AGENT_HOST
-#               valueFrom:
-#                 fieldRef:
-#                   fieldPath: status.hostIP
-#             - name: DD_SERVICE_NAME
-#               value: "kafka-producer"
 #             - name: DD_LOGS_INJECTION
 #               value: "true"
 #             - name: DD_TRACE_ANALYTICS_ENABLED
@@ -47,25 +45,25 @@
 #               value: "kafka.azure.pipsquack.ca:9092"
 #             - name: TOPIC_OUT
 #               value: "q1"
-
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kafka-middleman
+  labels:
+    tags.datadoghq.com/service: kafka-middleman
+    tags.datadoghq.com/version: "0.1"
+    app.kubernetes.io/name: kafka-middleman
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kafka-middleman
+      app.kubernetes.io/name: kafka-middleman
   template:
     metadata:
       name: kafka-middleman
       labels:
-        app: kafka-middleman
-        tags.datadoghq.com/env: techshare
-        tags.datadoghq.com/service: middleman
-        tags.datadoghq.com/version: "0.1"
+        app.kubernetes.io/name: kafka-middleman
       annotations:
         ad.datadoghq.com/kafka-middleman.logs: >-
           [
@@ -87,22 +85,6 @@ spec:
               memory: "256Mi"
               cpu: "500m"
           env:
-            - name: DD_AGENT_HOST
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.hostIP
-            - name: DD_ENV
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['tags.datadoghq.com/env']
-            - name: DD_SERVICE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['tags.datadoghq.com/service']
-            - name: DD_VERSION
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['tags.datadoghq.com/version']
             - name: DD_PROFILING_ENABLED
               value: "true"
             - name: DD_PROFILING_APIKEY
@@ -127,19 +109,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kafka-consumer
+  labels:
+    tags.datadoghq.com/service: kafka-consumer
+    tags.datadoghq.com/version: "0.1"
+    app.kubernetes.io/name: kafka-consumer
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kafka-consumer
+      app.kubernetes.io/name: kafka-consumer
   template:
     metadata:
       name: kafka-consumer
       labels:
-        app: kafka-consumer
-        tags.datadoghq.com/env: techshare
-        tags.datadoghq.com/service: consumer
-        tags.datadoghq.com/version: "0.1"
+        app.kubernetes.io/name: kafka-consumer
       annotations:
         ad.datadoghq.com/kafka-consumer.logs: >-
           [
@@ -161,22 +144,6 @@ spec:
               memory: "256Mi"
               cpu: "500m"
           env:
-            - name: DD_AGENT_HOST
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.hostIP
-            - name: DD_ENV
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['tags.datadoghq.com/env']
-            - name: DD_SERVICE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['tags.datadoghq.com/service']
-            - name: DD_VERSION
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['tags.datadoghq.com/version']
             - name: DD_PROFILING_ENABLED
               value: "true"
             - name: DD_PROFILING_APIKEY
@@ -199,19 +166,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kafka-servlet
+  labels:
+    tags.datadoghq.com/service: servlet
+    tags.datadoghq.com/version: "0.1"
+    app.kubernetes.io/name: kafka-serlet
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kafka-servlet
+      app.kubernetes.io/name: kafka-servlet
   template:
     metadata:
       name: kafka-servlet
       labels:
-        app: kafka-servlet
-        tags.datadoghq.com/env: techshare
-        tags.datadoghq.com/service: servlet
-        tags.datadoghq.com/version: "0.1"
+        app.kubernetes.io/name: kafka-servlet
       annotations:
         ad.datadoghq.com/kafka-servlet.logs: >-
           [
@@ -233,22 +201,6 @@ spec:
               memory: "256Mi"
               cpu: "500m"
           env:
-            - name: DD_AGENT_HOST
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.hostIP
-            - name: DD_ENV
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['tags.datadoghq.com/env']
-            - name: DD_SERVICE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['tags.datadoghq.com/service']
-            - name: DD_VERSION
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['tags.datadoghq.com/version']
             - name: DD_PROFILING_ENABLED
               value: "true"
             - name: DD_PROFILING_APIKEY
