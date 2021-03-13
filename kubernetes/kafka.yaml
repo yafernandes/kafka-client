@@ -1,0 +1,162 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper
+  namespace: kafka
+  labels:
+    app: zookeeper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+      annotations:
+        ad.datadoghq.com/zookeeper.check_names: |-
+          ["zk"]
+        ad.datadoghq.com/zookeeper.init_configs: |-
+          [
+              {
+                  "service": "zookeeper"
+              }
+          ]
+        ad.datadoghq.com/zookeeper.instances: |-
+          [
+              {
+                  "host": "%%host%%"
+              }
+          ]
+    spec:
+      containers:
+      - name: zookeeper
+        image: confluentinc/cp-zookeeper:6.1.0
+        env:
+        - name: ZOOKEEPER_CLIENT_PORT
+          value: "2181"
+        - name: ZOOKEEPER_TICK_TIME
+          value: "2000"
+        - name: EXTRA_ARGS
+          value: -Dzookeeper.4lw.commands.whitelist=srvr,stat,mntr
+        volumeMounts:
+          - mountPath: /var/lib/zookeeper/data
+            name: data
+          - mountPath: /var/lib/zookeeper/logs
+            name: logs
+        resources:
+          requests:
+            memory: "80M"
+            cpu: "10m"
+          limits:
+            memory: "128M"
+            cpu: "300m"
+      volumes:
+      - emptyDir: {}
+        name: data
+      - emptyDir: {}
+        name: logs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper
+  namespace: kafka
+spec:
+  selector:
+    app: zookeeper
+  ports:
+    - protocol: TCP
+      port: 2181
+      targetPort: 2181
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broker
+  namespace: kafka
+  labels:
+    app: broker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: broker
+  template:
+    metadata:
+      labels:
+        app: broker
+      annotations:
+        ad.datadoghq.com/broker.check_names: |-
+          ["kafka", "kafka_consumer"]
+        ad.datadoghq.com/broker.init_configs: |-
+          [
+              {
+                  "collect_default_metrics": true,
+                  "is_jmx": true,
+                  "new_gc_metrics": true,
+                  "service": "kafka"
+              },
+              {
+                  "service": "kafka"
+              }
+          ]
+        ad.datadoghq.com/broker.instances: |-
+          [
+              {
+                  "host": "%%host%%",
+                  "name": "kafka",
+                  "port": 7072
+              },
+              {
+                  "kafka_connect_str": [
+                      "%%host%%:9092"
+                  ],
+                  "monitor_all_broker_highwatermarks": true,
+                  "monitor_unlisted_consumer_groups": true
+              }
+          ]
+    spec:
+      containers:
+      - name: broker
+        image: confluentinc/cp-kafka:6.1.0
+        env:
+        - name: KAFKA_ZOOKEEPER_CONNECT
+          value: zookeeper:2181
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: PLAINTEXT://broker.kafka:9092
+        - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+          value: "1"
+        - name: KAFKA_JMX_PORT
+          value: "7072"
+        - name: KAFKA_HEAP_OPTS
+          value: -Xms148M -Xmx256M
+        volumeMounts:
+          - mountPath: /var/lib/kafka
+            name: log-dirs
+        resources:
+          requests:
+            memory: "300M"
+            cpu: "30m"
+          limits:
+            memory: "512M"
+            cpu: "500m"
+      volumes:
+      - emptyDir: {}
+        name: log-dirs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: broker
+  namespace: kafka
+spec:
+  selector:
+    app: broker
+  ports:
+    - name: port1
+      protocol: TCP
+      port: 9092
+      targetPort: 9092
+---
