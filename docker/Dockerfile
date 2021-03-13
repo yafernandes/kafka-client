@@ -1,5 +1,6 @@
-FROM openjdk:11
-ADD build/distributions/kafka-client.tar /
-COPY build/distributions/dd-java-agent.jar /
+FROM openjdk:11-slim
+ADD app/build/distributions/app.tar /
+WORKDIR /app
+ADD https://dtdg.co/latest-java-tracer /dd-java-agent.jar
 ENV JAVA_OPTS -javaagent:/dd-java-agent.jar
-CMD [ "/kafka-client/bin/kafka-client" ]
+CMD [ "bin/app" ]
